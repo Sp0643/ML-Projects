@@ -203,3 +203,25 @@ plt.xticks(range(X.shape[1]), X.columns[indices], rotation=90)
 plt.xlabel('Features')
 plt.ylabel('Importance Score')
 plt.show()
+
+
+
+
+3D SCATTER PLOT
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import seaborn as sns
+
+# Load Titanic dataset
+df = pd.read_csv("https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv")
+
+# Create 3D scatter plot
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(df['Age'], df['Fare'], df['Pclass'], c=df['Survived'], cmap='cool')
+ax.set_xlabel('Age')
+ax.set_ylabel('Fare')
+ax.set_zlabel('Pclass')
+ax.set_title('3D Scatter Plot of Titanic Dataset')
+plt.show()
