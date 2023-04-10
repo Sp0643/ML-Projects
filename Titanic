@@ -1,0 +1,129 @@
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.feature_selection import f_regression
+
+# Load Titanic dataset
+df = pd.read_csv('train.csv')
+
+# Drop unnecessary columns
+df.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1, inplace=True)
+
+# Convert categorical variables to dummy variables
+df = pd.get_dummies(df, columns=['Sex', 'Embarked'], drop_first=True)
+
+# Split into predictors and target variable
+X = df.drop('Survived', axis=1)
+y = df['Survived']
+
+# Forward regression
+def forward_regression(X, y, threshold_in=0.01):
+    # Fit an initial model with no predictors
+    initial_pvalue = 1
+    included = []
+    excluded = [i for i in range(X.shape[1])]
+    while True:
+        # Fit a model with all remaining predictors
+        pvalues = []
+        for i in excluded:
+            X_i = X[included + [i]]
+            pvalue = f_regression(X_i, y)[1][0]
+            pvalues.append(pvalue)
+        best_pvalue = min(pvalues)
+        best_i = excluded[pvalues.index(best_pvalue)]
+        # If the best p-value is below the threshold, include the predictor
+        if best_pvalue < threshold_in:
+            included.append(best_i)
+            excluded.remove(best_i)
+            initial_pvalue = best_pvalue
+        # If the best p-value is above the threshold, stop and return the model
+        else:
+            model = LinearRegression().fit(X[included], y)
+            return model, included
+
+# Backward regression
+def backward_regression(X, y, threshold_out=0.05):
+    # Fit a model with all predictors
+    model = LinearRegression().fit(X, y)
+    pvalues = f_regression(X, y)[1]
+    # Remove the predictor with the highest p-value
+    while max(pvalues) > threshold_out:
+        worst_i = np.argmax(pvalues)
+        X = np.delete(X, worst_i, axis=1)
+        model = LinearRegression().fit(X, y)
+        pvalues = f_regression(X, y)[1]
+    return model
+
+# Test forward regression
+model_forward, predictors_forward = forward_regression(X, y)
+print('Predictors selected by forward regression:', list(X.columns[predictors_forward]))
+print('R^2:', model_forward.score(X[predictors_forward], y))
+
+# Test backward regression
+model_backward = backward_regression(X, y)
+print('R^2:', model_backward.score(X, y))
+
+
+
+
+# FEATURE SELECTION USING F-TEST
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import SelectKBest, f_classif
+
+# Load Titanic dataset
+df = pd.read_csv('train.csv')
+
+# Drop unnecessary columns
+df.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1, inplace=True)
+
+# Convert categorical variables to dummy variables
+df = pd.get_dummies(df, columns=['Sex', 'Embarked'], drop_first=True)
+
+# Split into predictors and target variable
+X = df.drop('Survived', axis=1)
+y = df['Survived']
+
+# Perform feature selection with SelectKBest
+selector = SelectKBest(score_func=f_classif, k=5)
+X_new = selector.fit_transform(X, y)
+
+# Get the indices of the selected features
+mask = selector.get_support() # list of booleans
+selected_features = [] # The list of your K best features
+
+for bool, feature in zip(mask, X.columns):
+    if bool:
+        selected_features.append(feature)
+
+# Print the selected features
+print('Selected features:', selected_features)
+
+
+FEATURE IMPORTANCE USING RANDOM FOREST
+
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
+# Load Titanic dataset
+df = pd.read_csv('train.csv')
+
+# Drop unnecessary columns
+df.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1, inplace=True)
+
+# Convert categorical variables to dummy variables
+df = pd.get_dummies(df, columns=['Sex', 'Embarked'], drop_first=True)
+
+# Split into predictors and target variable
+X = df.drop('Survived', axis=1)
+y = df['Survived']
+
+# Train a random forest classifier to get feature importances
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+rf.fit(X, y)
+importances = rf.feature_importances_
+
+# Print feature importances
+for i, feature in enumerate(X.columns):
+    print(feature, importances[i])
+
