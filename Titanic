@@ -225,3 +225,41 @@ ax.set_ylabel('Fare')
 ax.set_zlabel('Pclass')
 ax.set_title('3D Scatter Plot of Titanic Dataset')
 plt.show()
+
+
+
+
+# WEIGHT OF FEATUES INSIDE PCA
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+# Load the Titanic dataset
+titanic = pd.read_csv('titanic.csv')
+
+# Drop unnecessary columns
+titanic = titanic.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1)
+
+# Replace missing values with the mean
+titanic = titanic.fillna(titanic.mean())
+
+# Standardize the data
+scaler = StandardScaler()
+titanic_scaled = scaler.fit_transform(titanic)
+
+# Perform PCA with two components
+pca = PCA(n_components=2)
+pca.fit(titanic_scaled)
+
+# Get the feature weights for the first principal component
+component_1 = pca.components_[0]
+
+# Create a dataframe of feature weights and their names
+weights_df = pd.DataFrame({'feature': titanic.columns, 'weight': component_1})
+
+# Sort the dataframe by weight in descending order
+weights_df = weights_df.sort_values('weight', ascending=False)
+
+# Print the sorted dataframe
+print(weights_df)
+
